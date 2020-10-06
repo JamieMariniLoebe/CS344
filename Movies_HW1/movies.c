@@ -1,43 +1,43 @@
-#include "movies.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h> //For ssize_t
+#include "movies.h"
 
 /* Parse the current line which is space delimited and create a
 *  movie struct with the data in this line
 */
-struct movie *createmovie(char *currLine)
+struct movie *createMovie(char *currLine)
 {
-    struct movie *currmovie = malloc(sizeof(struct movie));
+    struct movie *currMovie = malloc(sizeof(struct movie));
 
     // For use with strtok_r
     char *saveptr;
 
     // The first token is the title
     char *token = strtok_r(currLine, " ", &saveptr);
-    currmovie->title = calloc(strlen(token) + 1, sizeof(char));
-    strcpy(currmovie->title, token);
+    currMovie->title = calloc(strlen(token) + 1, sizeof(char));
+    strcpy(currMovie->title, token);
 
     // The next token is the year
     token = strtok_r(NULL, " ", &saveptr);
-    currmovie->year = calloc(strlen(token) + 1, sizeof(char));
-    strcpy(currmovie->year, token);
+    currMovie->year = calloc(strlen(token) + 1, sizeof(char));
+    strcpy(currMovie->year, token);
 
     // The next token is the languages
     token = strtok_r(NULL, " ", &saveptr);
-    currmovie->languages = calloc(strlen(token) + 1, sizeof(char));
-    strcpy(currmovie->languages, token);
+    currMovie->languages = calloc(strlen(token) + 1, sizeof(char));
+    strcpy(currMovie->languages, token);
 
     // The last token is the rating
     token = strtok_r(NULL, "\n", &saveptr);
-    currmovie->rating = calloc(strlen(token) + 1, sizeof(char));
-    strcpy(currmovie->rating, token);
+    currMovie->rating = calloc(strlen(token) + 1, sizeof(char));
+    strcpy(currMovie->rating, token);
 
     // Set the next node to NULL in the newly created movie entry
-    currmovie->next = NULL;
+    currMovie->next = NULL;
 
-    return currmovie;
+    return currMovie;
 }
 
 /*
@@ -63,7 +63,8 @@ struct movie *processFile(char *filePath)
     while ((nread = getline(&currLine, &len, movieFile)) != -1)
     {
         // Get a new movie node corresponding to the current line
-        struct movie *newNode = createmovie(currLine);
+        struct movie *newNode = createMovie
+    (currLine);
 
         // Is this the first node in the linked list?
         if (head == NULL)

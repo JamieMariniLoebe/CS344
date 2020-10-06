@@ -1,5 +1,5 @@
-#ifndef movies.h
-#define movies.h
+#ifndef MOVIES_H
+#define MOVIES_H
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -8,16 +8,15 @@
 /* struct for movie information */
 struct movie
 {
-    char *title;
     char *year;
     char *languages;
     char *rating;
     struct movie *next;
 };
 
-struct movie *createmovie(char *currLine);
+struct movie *createMovie(char *currLine);
 struct movie *processFile(char *filePath);
-void printmovie(struct movie* amovie);
-void printmovieList(struct movie *list);
+void printMovie(struct movie* amovie);
+void printMovieList(struct movie *list);
 
-#endif 
+#endif
