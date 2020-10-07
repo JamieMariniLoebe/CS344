@@ -15,17 +15,18 @@ struct movie *createMovie(char *currLine)
     char *saveptr;
 
     // The first token is the title
-    char *token = strtok_r(currLine, " ", &saveptr);
+    char *token = strtok_r(currLine, ",", &saveptr);
     currMovie->title = calloc(strlen(token) + 1, sizeof(char));
     strcpy(currMovie->title, token);
+    //printf("\n%s\n\n", currMovie->title); //TOKEN HOLDS MOVIE TITLE HERE, YEAR NEXT, ETC. AND IS MOVED TO MOVIE STRUCT
 
     // The next token is the year
-    token = strtok_r(NULL, " ", &saveptr);
+    token = strtok_r(NULL, ",", &saveptr);
     currMovie->year = calloc(strlen(token) + 1, sizeof(char));
     strcpy(currMovie->year, token);
 
     // The next token is the languages
-    token = strtok_r(NULL, " ", &saveptr);
+    token = strtok_r(NULL, ",", &saveptr);
     currMovie->languages = calloc(strlen(token) + 1, sizeof(char));
     strcpy(currMovie->languages, token);
 
@@ -63,8 +64,8 @@ struct movie *processFile(char *filePath)
     while ((nread = getline(&currLine, &len, movieFile)) != -1)
     {
         // Get a new movie node corresponding to the current line
-        struct movie *newNode = createMovie
-    (currLine);
+        struct movie *newNode = createMovie(currLine);
+        //printf("%d\n\n", newNode->title);
 
         // Is this the first node in the linked list?
         if (head == NULL)
@@ -84,6 +85,7 @@ struct movie *processFile(char *filePath)
     }
     free(currLine);
     fclose(movieFile);
+
     return head;
 }
 
@@ -99,7 +101,7 @@ void printmovie(struct movie* amovie){
 /*
 * Print the linked list of movies
 */
-void printmovieList(struct movie *list)
+void printMovieList(struct movie *list)
 {
     while (list != NULL)
     {

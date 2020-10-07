@@ -8,6 +8,7 @@
 /* struct for movie information */
 struct movie
 {
+    char *title;
     char *year;
     char *languages;
     char *rating;
