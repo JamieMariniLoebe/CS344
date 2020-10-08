@@ -44,8 +44,9 @@ int main(int argc, char *argv[])
 
     //printf("%s", argv[1]);
     struct movie *list = processFile(argv[1]);
+
+    menu(); //Displays menu, interacts with user. 
     
-    //Function that prints file name and # of movies in file
     //Display Menu and PROCESS USER REQUEST (MEAT OF PROGRAM IS HERE?)
 
     //printMovieList(list);

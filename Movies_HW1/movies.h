@@ -19,5 +19,7 @@ struct movie *createMovie(char *currLine);
 struct movie *processFile(char *filePath);
 void printMovie(struct movie* amovie);
 void printMovieList(struct movie *list);
+void menu();
+void userInput();
 
 #endif
