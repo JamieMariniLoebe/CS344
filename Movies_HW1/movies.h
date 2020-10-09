@@ -9,7 +9,7 @@
 struct movie
 {
     char *title;
-    char *year;
+    int *year;
     char *languages;
     char *rating;
     struct movie *next;
@@ -19,7 +19,8 @@ struct movie *createMovie(char *currLine);
 struct movie *processFile(char *filePath);
 void printMovie(struct movie* amovie);
 void printMovieList(struct movie *list);
-void menu();
-void userInput();
+int menu(struct movie *movieList);
+int userInput();
+/* struct movie * */ void displayMovies(int selection, struct movie *movies);
 
 #endif

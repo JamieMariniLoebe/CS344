@@ -41,13 +41,6 @@ int main(int argc, char *argv[])
         printf("Example usage: ./movies movie_info1.txt\n");
         return EXIT_FAILURE;
     }
-
-    //printf("%s", argv[1]);
     struct movie *list = processFile(argv[1]);
-
-    menu(); //Displays menu, interacts with user. 
-    
-    //Display Menu and PROCESS USER REQUEST (MEAT OF PROGRAM IS HERE?)
-
-    //printMovieList(list);
+    menu(list); //Displays menu, interacts with user. 
 }
