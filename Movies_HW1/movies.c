@@ -134,6 +134,7 @@ int menu(struct movie *listOfMovies) {
     //Need to print menu, get user input, display data per option chosen by user, then print menu again
     
     while (flag == 0) {
+        printf("--------------------MENU--------------------\n");
         printf("1. Show movies released in the specified year.\n");
         printf("2. Show highest rated movie for each year.\n");
         printf("3. Show the title and year of release of all movies in a specific language.\n");
@@ -150,10 +151,6 @@ int menu(struct movie *listOfMovies) {
         }
     }
 }
-
-/*
-* Gets data on films per request 
-
 
 /*
 * Gets user input, and displays data to user depending on their choice at menu
@@ -192,8 +189,6 @@ int userInput() { //Get user input, send input choice back to menu
     while(1) { //Infinite while loop, break when menu choice confirmed and data displayed
         if(choiceNum == 1)
         {
-            
-
             //printf("\nHere I will print out movies released in the year of %d!\n\n", year);
             return choiceNum;
         }
@@ -230,12 +225,9 @@ int userInput() { //Get user input, send input choice back to menu
 /*
 * Displays movie data
 */
-
-/* struct movie * */ 
 void displayMovies(int selection, struct movie *list) {
     //printf("Getting Movie data here, and printing!\n\n");
-    list=list->next;
-    printf("%s\n\n", list->title);
+    //printf("%s\n\n", list->title);
 
     switch(selection) {
     case 1:
@@ -243,31 +235,123 @@ void displayMovies(int selection, struct movie *list) {
             int *year; //year of release
             int i = 0; //counter
             char str[10]; //Hold user input from keyboard
-            int *releaseYearMovies[25]; //Array of movies released in specific year
-            int *ptrYear;
+            char *releaseYearMovies[] = { NULL }; //Array of movies released in specific year
+            //int *ptrYear;
+            int userYear;
+            int movieYear;
     
             printf("\nEnter the release year for which you want to see movies: ");
             scanf("%d", &year);
-            //printf("%s\n\n", list->title);
+
+            //printf("\nHere are the movies released in the year %d\n\n", year);
+
+            //printf("Curr Movie: %s\n\n", list->title);
             //printf("%d\n\n", list->year);
 
             while (list->next != NULL) { //While still movies in linked list to check
-                //ptrYear = &(list->year);
+                //ptrYear = &(list->year)
                 //printf("%d\n\n", *ptrYear);
-                list = list->next;
-                //printf("%d\n\n", (int*)year);
-                //printf("%d\n\n", list->year);
+                //list is at NULL right now (AKA head)
+                list = list->next; //We have anothre movie to check, move to that movie node
+                
+                //printf("User Request: %d\n\n", (int *)year);
+                userYear = (int *) year;
+                //printf("Movie Date: %d\n\n", (int *)list->year);
+                movieYear = (int *)list->year;
+                //list = list->next; //Now we point list to FIRST movie
+                //printf("%s\n\n", list->title);
 
-                if((int *)list->year == (int *)year) { //Compare values pointed to by these 2 pointers (cast pointers to ints)
-                    printf("Correct!\n\n");
-                    //releaseYearMovies[0] = &year; //need to fix, NEED TO ADD POINTERS TO INTS TO ARRAY, PRINT OUT
-                    //printf("%d\n\n", *releaseYearMovies[0]);
-                    //i++
+                if(userYear == movieYear) { //Compare values pointed to by these 2 pointers (cast pointers to ints)
+                    //printf("Compare successful!\n\n");
+                    printf("%s\n", list->title);
+                    //releaseYearMovies[i] = calloc(strlen(list->title) + 1, sizeof(char));
+                    //releaseYearMovies[i] = list->title; 
+                    //printf("%d\n\n", releaseYearMovies[i]);
+                    i++;
                 }
             }
-            for (int j=0; j<i; j++) {
-                printf("%d\n\n", releaseYearMovies[j]);
+            printf("\n");
+            if(i == 0) {
+                printf("No data about movies released in %d\n\n", year);
             }
+            /*else {
+                for(int i=0; i<sizeof(releaseYearMovies)-1; i++) {
+                    printf("%d", releaseYearMovies[i]);
+                }
+            } */
         }
+    case 2: //Highest rated movie for each year
+        {
+            int *years; //Hold years accounted for/avoid duplicates
+            int *trueYears;
+            struct movie *highestRated; //Array to hold highest rated movies per year
+            int i = 0;
+            int releaseYear;
+            int len = sizeof(trueYears)/sizeof(trueYears[0]);
+
+            int sizeYears = counter(list);
+
+            years = malloc(sizeYears * sizeof(int));
+
+            /*1.) Loop thru Struct Movie List
+            /*2.) Loop thru Years array 
+            /* Compare movie release year at position j in Struct Movie List with movie reease years already added to Years array 
+            for(int j=0; j<i; j++)  {
+                for(int k=0; k<) 
+            }*/
+            //4printf("%s", list->title);
+
+            trueYears = printMovieYear(list, years);
+
+            while (list->next != NULL) {
+                //printf("%s\n", list->title);
+                releaseYear = (int *)list->year;
+                //printf("%d\n\n", releaseYear);
+
+                //1.) GET ARRAY OF ALL MOVIES (structs)
+                //2.) TAKE FIRST FILM IN ARRAY, COMPARE TO EVERY OTHER FILM, IF YEARS MATCH,
+                //    COMPARE AND REMOVE LOWER RATED MOVIE FROM ARRAY
+                //3.) CONTINUE WITH REST OF MOVIES, COMPARING MOVIES WITH SAME RELEASE YEAR AND REMOVING
+                //    LOWER RATED MOVIES
+                //4.) AT THE END, SHOULD HAVE ONLY 1 MOVIE PER YEAR, WHICH WILL BE HIGHEST RATED MOVIE
+                
+                /* for(int j=0; j<len; j++) {
+                    if(releaseYear == years[j]) {
+                        list = list->next;
+                        continue; //Duplicate, skip this year, check next
+                    }
+                    else {
+                        trueYears[j] = releaseYear;
+                        list = list->next;
+                        //printf("%d\n", years[j]);
+                    }
+                } */
+            }
+            for(int k=0; k<len; k++) {
+                printf("Year: %d\n", trueYears[k]);
+            }
+
+        }
+    }
+}
+
+int counter(struct movie *list) {
+    int i = 0;
+    while(list->next != NULL) {
+        i++; //Count # of movies
+        list = list->next;
+    }
+    return i;
+}
+
+//return array of years of all movies
+int *printMovieYear(struct movie *list, int *arr)
+{
+    int i = 0;
+    while (list != NULL)
+    {
+        arr[i] = list->year;
+        list = list->next;
+        i++;
     }
 }
