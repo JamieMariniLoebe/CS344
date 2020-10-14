@@ -12,6 +12,7 @@ struct movie
     int *year;
     char *languages;
     char *rating;
+    struct movie *head;
     struct movie *next;
 };
 
@@ -21,6 +22,6 @@ void printMovie(struct movie* amovie);
 void printMovieList(struct movie *list);
 int menu(struct movie *movieList);
 int userInput();
-/* struct movie * */ void displayMovies(int selection, struct movie *movies);
+/* struct movie * */ void displayMovies(int selection, struct movie *movies, char *langgg);
 
 #endif

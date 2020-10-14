@@ -93,7 +93,7 @@ struct movie *processFile(char *filePath)
     free(currLine);
     fclose(movieFile);
 
-    count--; //Subtract one, first line is header
+    count--; //Subtract one, first line is movie2er
 
     //printf("/n/n%d/n/n", count);
 
@@ -148,10 +148,21 @@ int menu(struct movie *listOfMovies)
         { //If user inputs 4, exit while loop and return -1 to main (exit program);
             flag = 1;
         }
+        else if (optionChosen == 3)
+        {
+            char lang[20];
+
+            printf("\nEnter the language for which you want to see movies: ");
+
+            scanf("%s", &lang);
+
+            displayMovies(optionChosen, listOfMovies, lang);
+        }
         else
         {
+            char *nada;
             //printf("\nMoving on to Display Movies function!!\n\n");
-            displayMovies(optionChosen, listOfMovies);
+            displayMovies(optionChosen, listOfMovies, nada);
         }
     }
 }
@@ -210,11 +221,6 @@ int userInput()
         }
         else if (choiceNum == 3)
         {
-            char lang[20];
-
-            printf("\nEnter the language for which you want to see movies: ");
-
-            scanf("%s", &lang);
 
             //NOT NEEDED, but good place for error handling/Confirm this language is included in list of movies
 
@@ -240,11 +246,11 @@ int userInput()
 /*
 * Displays movie data
 */
-void displayMovies(int selection, struct movie *list)
+void displayMovies(int selection, struct movie *list, char *lang)
 {
     //printf("Getting Movie data here, and printing!\n\n");
     //printf("%s\n\n", list->title);
-    struct movie *head = list;
+    struct movie *movie2 = list;
 
     switch (selection)
     {
@@ -261,17 +267,9 @@ void displayMovies(int selection, struct movie *list)
         printf("\nEnter the release year for which you want to see movies: ");
         scanf("%d", &year);
 
-        //printf("\nHere are the movies released in the year %d\n\n", year);
-
-        //printf("Curr Movie: %s\n\n", list->title);
-        //printf("%d\n\n", list->year);
-
         while (list->next != NULL)
-        { //While still movies in linked list to check
-            //ptrYear = &(list->year)
-            //printf("%d\n\n", *ptrYear);
-            //list is at NULL right now (AKA head)
-            list = list->next; //We have anothre movie to check, move to that movie node
+        {                      //While still movies in linked list to check
+            list = list->next; //We have another movie to check, move to that movie
 
             //printf("User Request: %d\n\n", (int *)year);
             userYear = (int *)year;
@@ -307,152 +305,102 @@ void displayMovies(int selection, struct movie *list)
     case 2: //Highest rated movie for each year
     {
         printf("\n\n");
-        int *years; //Hold release years
-        
-        
-        /*int *trueYears;
-        int releaseYear;
-        int len = sizeof(trueYears)/sizeof(trueYears[0]); */
-
+        int *years;                              //Hold release years
+        //int i = 0;
+        int m = 0; //Counter for BEST rated films array
+        int k = 0; //Counter for 'movie1'
+        int j = 0;
+        int numOfMovies = counter(list); /* Get # of movies in linked list */
         struct movie *highestRated[24] = {NULL}; //Array to hold highest rated movies per year
-        int i = 0;
+        int len = sizeof(highestRated) / sizeof(highestRated[0]);
+        struct movie *movie1 = list; //Pointer to hold movie being comapred to array
+        struct movie *movie2 = list; //Pointer to hold current index in array being compared to movie1
+        struct movie *movietwo = list;
+        struct movie *rateCompare(struct movie * one, struct movie * arr);
+        struct movie *betterMovie = (struct movie *)malloc(sizeof(struct movie *));
+        //movie1 = movie2; //Set movie1 to current movie in linked list
+        
 
-        //int sizeYears = counter(list);
-
-        //years = malloc(sizeYears * sizeof(int));
-
-        /*1.) Loop thru Struct Movie List
-            /*2.) Loop thru Years array 
-            /* Compare movie release year at position j in Struct Movie List with movie reease years already added to Years array 
-            for(int j=0; j<i; j++)  {
-                for(int k=0; k<) 
-            }*/
-        //4printf("%s", list->title);
-
-        //trueYears = printMovieYear(list, years);
-
-        int numOfMovies = counter(list); /* counter(list); //Get # of movies in linked list */
-        // printf("%d\n\n", numOfMovies);
+        
 
         for (int j = 0; j < numOfMovies; j++)
         { //Malloc space for array of structs
-            highestRated[i] = malloc(sizeof(list));
+            highestRated[j] = (struct movie *)malloc(sizeof(list));
         }
 
-        while (list->next != NULL)
-        { //loop thru linked list
+        /* FLOW OF BELOW CODE
+        * movie1 --> Current film being compared to all movies in highestRated array (constant)
+        * j --> Film at highestRated[i] being compared to movie1 (temporary) */
 
-            list = list->next;      //get next movie
-            highestRated[i] = list; //Get movie and put at ith index
-            i++;
-
-            //memcpy(highestRated, &list, sizeof list);
-            //printf("%s\n", highestRated[i]->title);
-            //printf("%d\n\n", highestRated[i]->year);
-
-            /* if(((int *) highestRated[i]->year == 2008)) {
-                    printf("YOU DID IT!!");
-                } */
-
-            //printd("%s\n\n", list->year);
-
-            //highestRated[i] = list;
-            //printf("%s\n", list->title);
-
-            //printf("%d\n\n", releaseYear);
-
-            //------DONE------1.) GET ARRAY OF ALL MOVIES (structs)
-            //2.) TAKE FIRST FILM IN ARRAY, COMPARE TO EVERY OTHER FILM, IF YEARS MATCH,
-            //    COMPARE AND REMOVE LOWER RATED MOVIE FROM ARRAY
-            //3.) CONTINUE WITH REST OF MOVIES, COMPARING MOVIES WITH SAME RELEASE YEAR AND REMOVING
-            //    LOWER RATED MOVIES
-            //4.) AT THE END, SHOULD HAVE ONLY 1 MOVIE PER YEAR, WHICH WILL BE HIGHEST RATED MOVIE
-
-            /* for(int j=0; j<len; j++) {
-                    if(releaseYear == years[j]) {
-                        list = list->next;
-                        continue; //Duplicate, skip this year, check next
-                    }
-                    else {
-                        trueYears[j] = releaseYear;
-                        list = list->next;
-                        //printf("%d\n", years[j]);
-                    }
-                } */
-        }
-        /* Now we have array of all the movies. 
-            
-        FLOW OF BELOW CODE
-        filmOne --> Current film being compared to all movies in highestRated array (constant)
-        j --> Film at highestRated[i] being compared to filmOne (temporary) */
-
-        struct movie *newList = head;            //Pointer to head of linked list
-        int j = 0;                               //Counter for array of ALL films
-        int k = 0;                               //Counter for BEST rated films array
-        struct movie *filmOne;
-        struct movie *bestRated = malloc(sizeof(struct movie) * 24);
-        struct movie *rateCompare(struct movie *one, struct movie *arr);
-
-        /*1.) WHILE: Get movie  at highestRated[J] in the films array, and place in variable 'filmOne' (memcpy???) */
-        while (newList->next != NULL)
+        /*1.) WHILE:  */
+        int l = 0;
+        while (movie1->next != NULL) //Iterate thru each film to compare to entire array
         {
-            //printf("%s\n\n", filmOne->title);
-            newList = newList->next; //Move to next film(node)
+            l = 0;
+            movie1 = movie1->next; //Move to next film(node) as 'movie1'
+            //movietwo = movie2->head;
+            printf("movie1: %s\n", movie1->title);
+            //printf("%s\n", movie2->title);
 
-            //Start new loop so as to move to next film for comparing to array?
-            filmOne = highestRated[k]; //Set filmOne to Kth highestRated[k]
+            //movie2 = newList;          //Start from beginning of list again
 
-            /*
-                
-                    ii.) ELSE IF: 'filmOne' has a LOWER rating than 'filmTwo'
-                        -Do nothing (continue?). *Leave filmTwo, as it will eventually become 'filmOne' and be compared
-                        again to the current 'filmOne'. At that point, the current filmOne will be removed.*
-
-                        -OR find 'filmOne' in highestRated[] array, and remove it?
-
-                    iii.) ELSE: If both films have the SAME rating
-                        -Remove 'filmTwo' from highestRated[] by default
-            3. END LOOP */
-            printf("%s and %s \n", filmOne->title, highestRated[j]->title);
-            //printf("%s\n", (char *)filmOne->title);
-            
-            int strcmp1 = strcmp(filmOne->title, highestRated[j]->title); //Return 0 if films are the same
-            int yearSame = yearCompare(filmOne, highestRated[j]);
-
-            //START: Check if 'filmOne' is being compared to itself
-
-            if (strcmp1 == 0) //Both films are the same
+            while(l < numOfMovies) //Iterate thru list for movies to COMAPARE to movie1
             {
-                printf("Same MOVIE\n\n");
-                j++; //move to next film
-                continue; //skip current iteration (To next node)
-            }
+                betterMovie = NULL;
+                movie2 = movie2->next;
+                movietwo = movie2;
+                printf("movie2: %s\n", movietwo->title);
 
-            /*b.) ELSE: Films are NOT the same*/
-            else if (yearSame == 0) //Films have same release year
-            { //Remove lower rated film
-                /*Compare 'filmOne' release year to film at highestRated[i] (filmTwo)  */
-                struct movie *lowerRated = rateCompare(filmOne, highestRated[j]); //Get film with lower rating
-                //removeMovie(lowerRated); //Remove film with lower rating or remove by default if have same ratings
+                int strcmp1 = strcmp(movie1->title, movietwo->title); //Return 0 if films are the same
+                int yearSame = yearCompare(movie1, movietwo);
 
-                printf("Removing %s\n\n", lowerRated->title);
-                j++;
-            }
-            else {
-                printf("Films do NOT have the same release year\n\n");
-                j++;
-                continue;
+                //START: Check if 'movie1' is being compared to itself
+
+                if (strcmp1 == 0) //Both films are the same
+                {
+                    //printf("Same MOVIE\n\n");
+                    continue; //skip current iteration (To next node)
+                }
+
+                /*b.) ELSE: Films are NOT duplicates*/
+                else if (yearSame != 1) //Films have same release year
+                {
+                    char *end1;
+                    char *end2;
+                    double movieRating1;
+                    double movieRating2;
+
+                    movieRating1 = strtod(movie1->rating, &end1);
+                    movieRating2 = strtod(movietwo->rating, &end2);
+
+                    if(movieRating1 > movieRating2) {
+                        betterMovie = movie1;
+                    }
+                    else { //Movie2 rating is better, or same so default to movie2
+                        betterMovie = movietwo;
+                    }
+                }
+            highestRated[k] = betterMovie;
+            k++;
+            l++;
             }
         }
+        for(int i=0; i<len; i++) {
+            printf("%s\n", highestRated[i]->title);
+        }
+    }
 
-        /*STILL TO BE DONE:
-            1.) ITERATE THRU ARRAY FOR 'FILMONE'
-            2.) IMPLEMENT REMOVEMOVIE FUNCTION
+    case 3:
+    {
 
-            WORK ON OPTION 3
-        
-        
-        */
+        while(list->next != NULL) {
+            list = list->next;
+            printf("%s\n", list->languages);
+            
+            if((char *)list->languages == selection) {
+                printf("%s\n\n", list->title);
+            }
+        }
     }
     }
 }
@@ -468,22 +416,28 @@ int counter(struct movie *list) //Count and return # of films in list
     return i;
 }
 
-struct movie *rateCompare(struct movie *one, struct movie *arr) { //Compare release years of both movies, return lower rated movie
-    if((int *)one->rating > (int *)arr->rating) { 
-        return arr; //Return two if has lower rating
+struct movie *rateCompare(struct movie *one, struct movie *two)
+{ //Compare release years of both movies, return lower rated movie
+    if ((double *)one->rating < (double *)two->rating)
+    {
+        return two; //Return two if has lower rating
     }
     return one; //If One has better rating, or both films have the same rating, then return one
 }
 
-void removeMovie(struct movie *movieToRemove, struct movie *arr) { //Film to remove, and array from which to remove it
-
+void addMovie(struct movie *movieToAdd, struct movie *arr[], int index)
+{
+    //int len = sizeof(arr)/sizeof(arr[0]);
+    arr[index] = movieToAdd;
 }
 
-int yearCompare(struct movie *one, struct movie *two) { //return 0 if films have same release year
+int yearCompare(struct movie *one, struct movie *two)
+{ //return 0 if films have same release year
     int yearOne = (int *)one->year;
     int yearTwo = (int *)two->year;
 
-    if(yearOne == yearTwo) {
+    if (yearOne == yearTwo)
+    {
         return 0;
     }
     return 1;
@@ -502,28 +456,27 @@ int yearCompare(struct movie *one, struct movie *two) { //return 0 if films have
     return i;
 } */
 
-/* i.) IF: 'filmOne' has same release year as highestRated[j] */
-                /*if ((int *)filmOne->year == (int *)highestRated[j]->year) //Correctly compares release years
+/* i.) IF: 'movie1' has same release year as highestRated[j] */
+/*if ((int *)movie1->year == (int *)highestRated[j]->year) //Correctly compares release years
                 {
                     printf("Same YEAR\n\n");
-                    printf("%d and %d\n\n", filmOne->year, highestRated[j]->year);
+                    printf("%d and %d\n\n", movie1->year, highestRated[j]->year);
                     j++;
                 } */
-
 
 /*
                 //NEED TO STILL COMPARE RATINGS, MOVE HIGHER RATED FILM TO NEW ARRAY
                 //ALSO NEED TO WORK ON ITERATING THRU EACH MOVIE TO COMPARE */
 
-                    /*if ((int *)filmOne->rating > (int *)highestRated[j]->rating)
+/*if ((int *)movie1->rating > (int *)highestRated[j]->rating)
                     {
-                        printf("ADDING %s\n\n", filmOne[j].title);
-                        memcpy(&bestRated[k], filmOne, sizeof(highestRated[j]));
+                        printf("ADDING %s\n\n", movie1[j].title);
+                        memcpy(&bestRated[k], movie1, sizeof(highestRated[j]));
                         j++;
                         k++;
                         //Create function to remove index from array
                     }
-                    /*else if ((int *)filmOne->rating < (int *)highestRated[j]->rating)
+                    /*else if ((int *)movie1->rating < (int *)highestRated[j]->rating)
                     {
                         printf("ADDING %s\n\n", highestRated[j]->title);
                         memcpy(&bestRated[k], highestRated[j], sizeof(highestRated[j]));
@@ -540,13 +493,121 @@ int yearCompare(struct movie *one, struct movie *two) { //return 0 if films have
             }
             j++;
         } */
-        /*4. START NEW LOOP
+/*4. START NEW LOOP
                 a.) Display each movie in array (FORMAT: Year - Rating - Title)
             */
-        /* int len = sizeof(bestRated) / sizeof(bestRated[0]);
+/* int len = sizeof(bestRated) / sizeof(bestRated[0]);
         //printf("%d", len);
         for (int i = 0; i < len; i++)
         {
             printf("%d %d %s \n", bestRated[i].year, bestRated[i].rating, bestRated[i].title);
         }
+        } */
+
+/*
+                
+                    ii.) ELSE IF: 'movie1' has a LOWER rating than 'filmTwo'
+                        -Do nothing (continue?). *Leave filmTwo, as it will eventually become 'movie1' and be compared
+                        again to the current 'movie1'. At that point, the current movie1 will be removed.*
+
+                        -OR find 'movie1' in highestRated[] array, and remove it?
+
+                    iii.) ELSE: If both films have the SAME rating
+                        -Remove 'filmTwo' from highestRated[] by default
+            3. END LOOP */
+
+//int sizeYears = counter(list);
+
+//years = malloc(sizeYears * sizeof(int));
+
+/*1.) Loop thru Struct Movie List
+            /*2.) Loop thru Years array 
+            /* Compare movie release year at position j in Struct Movie List with movie reease years already added to Years array 
+            for(int j=0; j<i; j++)  {
+                for(int k=0; k<) 
+            }*/
+//4printf("%s", list->title);
+
+/*while (list->next != NULL)
+{ //loop thru linked list
+
+    list = list->next;      //get next movie
+    highestRated[i] = list; //Get movie and put at ith index
+    i++;
+
+    //memcpy(highestRated, &list, sizeof list);
+    //printf("%s\n", highestRated[i]->title);
+    //printf("%d\n\n", highestRated[i]->year);
+
+    /* if(((int *) highestRated[i]->year == 2008)) {
+                    printf("YOU DID IT!!");
+                } */
+
+//printd("%s\n\n", list->year);
+
+//highestRated[i] = list;
+//printf("%s\n", list->title);
+
+//printf("%d\n\n", releaseYear);
+
+//------DONE------1.) GET ARRAY OF ALL MOVIES (structs)
+//2.) TAKE FIRST FILM IN ARRAY, COMPARE TO EVERY OTHER FILM, IF YEARS MATCH,
+//    COMPARE AND REMOVE LOWER RATED MOVIE FROM ARRAY
+//3.) CONTINUE WITH REST OF MOVIES, COMPARING MOVIES WITH SAME RELEASE YEAR AND REMOVING
+//    LOWER RATED MOVIES
+//4.) AT THE END, SHOULD HAVE ONLY 1 MOVIE PER YEAR, WHICH WILL BE HIGHEST RATED MOVIE
+
+/* for(int j=0; j<len; j++) {
+                    if(releaseYear == years[j]) {
+                        list = list->next;
+                        continue; //Duplicate, skip this year, check next
+                    }
+                    else {
+                        trueYears[j] = releaseYear;
+                        list = list->next;
+                        //printf("%d\n", years[j]);
+                    }
+                } */
+//}
+/* Now we have array of all the movies.  */
+
+/*while(0) { //keep checking until 
+                        printf("Inside while loop");
+                        break;
+
+                        /*for(int m=0; m<23; m++) //itre
+                        {
+                            strcpy(highTitle1, highestRated[k]->title);
+                            strcpy(highTitle2, higherRated->title);
+                            printf("%s\n", highTitle1);
+                            printf("%s\n", highTitle2);
+                            break;
+                            /*if(strcmp(highTitle1,highTitle2)) 
+                            {
+                                printf("Already in list");
+                                break;
+                            } 
+                        } 
+                    } */
+
+/*&if(flag == 0) {
+                        addMovie(higherRated, highestRated, k); //Add film w higher rating
+                    }
+
+                    //printf("Adding %s\n\n", higherRated->title);
+                }
+                else
+                {
+                    //printf("Films do NOT have the same release year\n\n");
+                    continue;
+                } */
+//printf("%s\n", highestRated[4]->title);
+
+//int len= sizeof(highestRated)/sizeof(highestRated[0]);
+
+/*for(int i=0; i<len-1; i++) {
+            char * str;
+            double rate;
+            rate = strtod(highestRated[i]->rating, str);
+            //printf("%.1f %d %s\n", rate, highestRated[i]->year, highestRated[i]->title);
         } */
