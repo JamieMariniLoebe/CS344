@@ -1,3 +1,12 @@
+/************************************************
+* Author: Jamie Marini Loebe
+* Date: 11/03/2020
+* Class: CS 362 - 400 - F2020
+* Description: This program, smallsh imitates a 
+* shell and performs various features of a shell.
+************************************************/
+
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -12,6 +21,7 @@
 #define BUFFER_SIZE 2048 
 #define MAX_ARGS 512
 
+/* Checking for blank lines */
 int isBlankLine(char* command) {
     char c;
     int argCount = 0;
@@ -25,9 +35,10 @@ int isBlankLine(char* command) {
     return 1; //return true
 }
 
-int allowBackground = 1; //toggle background
+int allowBackground = 1; 
 int atPrompt = 0; //fgets 
 
+/* Toggling allowBackground variable */
 void toggleBackgroundProcess(int signal) {
     if(allowBackground == 1) {
         allowBackground = 0;
@@ -42,6 +53,8 @@ void toggleBackgroundProcess(int signal) {
 }
 
 int main() {
+
+    /*Signal data*/
     struct sigaction original_sig_int_handler = {0};
     struct sigaction sig_ignore_handler = {
         .sa_handler = SIG_IGN //sig ignore
@@ -60,16 +73,18 @@ int main() {
     
     pid_t pid = getpid();
 
+    /*Ignoring SIGINT*/
     if(sigaction(SIGINT, &sig_ignore_handler, &original_sig_int_handler) != 0) {
         perror("sigaction sigint");
         exit(1);
     }
-    //save original sig handler for foreground child process
+
     if(sigaction(SIGTSTP, &sig_tstp_handler, NULL) != 0) {
         perror("sigaction sigint");
         exit(1);
     }
     
+    /*Saving original sig handler for foreground child process*/
     int originalAllowBackground = allowBackground;
 
     while(1) { 
@@ -85,15 +100,16 @@ int main() {
 
         int i=0; //counter
 
-        for(i=0; i<MAX_ARGS+2 && args[i] != NULL; i++) {
+        for(i=0; i<MAX_ARGS+2 && args[i] != NULL; i++) { //Freeing memory
             free(args[i]);
             args[i] = NULL;
         }
         
         memset(command,0,sizeof(command));
 
-        if(inputFileName) { //Free memory each time
-            if(strcmp(inputFileName, "/dev/null") != 0) 
+        /*Freeing memory if file name not null*/
+        if(inputFileName) { 
+            if(strcmp(inputFileName, "/dev/null") != 0)  //check if /dev/null
             {
                 free(inputFileName);
             }
@@ -101,7 +117,8 @@ int main() {
             inputFileName = NULL;
         }
 
-        if(outputFileName) { //Free memory each times
+        /*Freeing memory if output file name not null*/ 
+        if(outputFileName) { 
             if(strcmp(outputFileName, "/dev/null") != 0)
             {
                 free(outputFileName);
@@ -112,7 +129,8 @@ int main() {
         int childStatus = 0;
         int childID = 0;
         
-        while((childID = waitpid(-1, &childStatus, WNOHANG)) > 0) //looping thru all child processes
+        /*Looping thru all child processes*/
+        while((childID = waitpid(-1, &childStatus, WNOHANG)) > 0)
         {
             if(WIFEXITED(childStatus)) 
             {
@@ -122,15 +140,15 @@ int main() {
             {
                 printf("Background pid %d is done: terminated by signal %d\n", childID, WTERMSIG(childStatus));
             }
-        } //Waiting for any child
+        }
 
-        printf(": ");
-        atPrompt = 1;
+        printf(": "); //prompt
+        atPrompt = 1; //prompt flag
         fgets(command, sizeof(command), stdin); //Get input from user
-        atPrompt = 0;
+        atPrompt = 0; //Toggle flag
 
-        //Check if empty
-        if(isBlankLine(command) || command[0] == '#'){ 
+        /*Checking for blank lines/comments*/
+        if(isBlankLine(command) || command[0] == '#'){  //Ignoring all blank lines and comments
             //Ignore blank lines and comments
             continue;
         } 
@@ -145,39 +163,48 @@ int main() {
             
             token = strtok(command, " \t\n"); //space, tab, newline are delimiters
 
-            //Parse args
-            while(token != NULL) { //Will break loop when no more tokens
-                if(ampersand == 1) {
-                    ampersand = 0;
+            /*Parse args*/
+            while(token != NULL) { //Will break loop when no more parsing to be done
+                if(ampersand == 1) { //If ampersand is NOT last word/input (as had more input after prev ampersand)
+                    ampersand = 0; //Toggle back to 0, false ampersand
                     args[argCount] = calloc(2, sizeof(char)); //Calloc initalizes to 0
                     sprintf(args[argCount], "%c", '&'); //If reached, ampersand found was not last word in list/not the background
                     argCount++; //Check next word
                 }
 
+                /*If $$ */
                 if(strcmp(token, "$$") == 0) {
-                    args[argCount] = calloc(10, sizeof(char)); //Calloc initalizes to 0
-                    sprintf(args[argCount], "%d", pid); //Converting pid to string
+                    args[argCount] = calloc(10, sizeof(char)); 
+                    sprintf(args[argCount], "%d", pid); 
                     argCount++;
                 }
+                /*Will expect input file*/
                 else if(strcmp(token, "<") == 0) {
                     inputFileExpected = 1;
 
-                } else if(strcmp(token, ">") == 0) {
+                } 
+                /*Will expect output file*/
+                else if(strcmp(token, ">") == 0) {
                     outputFileExpected = 1;
 
-                } else if(strcmp(token, "&") == 0) {
+                } 
+                /*Setting ampersand to 1 for ampersand found, will check next token to see if last word */
+                else if(strcmp(token, "&") == 0) {
                     ampersand = 1; //If set after while loop, this command needs to be put in background (& last word)
                 }
+                /*If expecting inputFile, toggle var to 0, calloc space for file, copy in file name*/
                 else if(inputFileExpected) {
                     inputFileExpected = 0;
                     inputFileName = calloc(BUFFER_SIZE+1, sizeof(char)); //Calloc initalizes to 0
                     strcpy(inputFileName,token); //copy in filename
                 }
+                /*If expecting outputFile, toggle var to 0, calloc space for file, copy in file name*/
                 else if(outputFileExpected) {
                     outputFileExpected = 0;
                     outputFileName = calloc(BUFFER_SIZE+1, sizeof(char)); //Calloc initalizes to 0
                     strcpy(outputFileName,token);
                 }
+                /*Non built-in command, calloc space for new arg(s)*/
                 else {
                     args[argCount] = calloc(BUFFER_SIZE+1, sizeof(char)); //Calloc initalizes to 0
                     strcpy(args[argCount], token);
@@ -190,10 +217,12 @@ int main() {
             if(argCount == 0) {
                 continue; //Nothing to be done, no args
             }
+
             if(allowBackground == 0) {
                 ampersand = 0;
             }
-            if (ampersand == 1) //ampersand last, background
+            /*Ampersand was last, thus command will be background process*/
+            if (ampersand == 1) 
             {
                 if (inputFileName == NULL) 
                 {
@@ -203,25 +232,27 @@ int main() {
                     outputFileName = "/dev/null";
                 }
             }
-            //if user input exit, terminate program
+            /*Exit program*/
             if(strcmp(args[0], "exit") == 0) { 
                 exit(0);
             }
 
-            else if(strcmp(args[0], "cd") == 0) {
-                if(argCount == 1) {
-                    char* homeDir = getenv("HOME");
-                    chdir(homeDir); //Change directory to directory located in homeDir
+            /*Change directory command*/
+            else if(strcmp(args[0], "cd") == 0) { 
+                if(argCount == 1) { //if no further args beyond cd
+                    char* homeDir = getenv("HOME"); 
+                    chdir(homeDir); //Change directory to that located in homeDir
                 }
-                else {
+                //If further args after cd
+                else { 
                     char* dir = args[1]; //Directory to change to
                     status = chdir(dir); //Use status to check success or fail (-1)
                     if(status == -1) {
-                        printf("Directory not found!\n");
+                        printf("Directory not found!\n"); //Fail
                     }
-                    //Change directory to whichever specified directory
                 }
             }
+            /*Status*/
             else if(strcmp(args[0], "status") == 0) {
                 if(WIFEXITED(status)) 
                 {
@@ -232,6 +263,7 @@ int main() {
                     printf("Terminated by signal %d\n", WTERMSIG(status));
                 }
             }
+            /*Fork into child process*/
             else {
                 int i = 0;
 
@@ -254,10 +286,9 @@ int main() {
                             exit(1);
                         }
                         
-                        //printf("Child (%d) is now running...\n", getpid());
-                        if(inputFileName != NULL) {
-                            //printf("Redirect stdin to %s\n", inputFileName);
+                        if(inputFileName != NULL) { //If have file, open
                             int fd = open(inputFileName, O_RDONLY); // i/o file redirection, read only
+
                             if(fd == -1) {
                                 perror("Stdin open");
                                 exit(1);
@@ -268,11 +299,12 @@ int main() {
                             }
                             close(fd);
                         }
-                        if(outputFileName != NULL) {
-                            //printf("Redirect stdout to %s\n", outputFileName);
+
+                        if(outputFileName != NULL) { 
                             int flags = O_WRONLY;
                             int fd = 0;
-                            if(strcmp(outputFileName, "/dev/null") != 0) { //Check outputFileName is dev/null
+
+                            if(strcmp(outputFileName, "/dev/null") != 0) { //Check outputFileName
                                 flags |= O_TRUNC | O_CREAT;
                                 fd = open(outputFileName, flags, 0666); //i/o file redirection, write only. truncate, create
                             }
@@ -298,7 +330,7 @@ int main() {
                     default: //Adding square brackets to avoid 'label' error
                         {
                             if(ampersand == 0) {
-                                int retpid = 0;
+                                int retpid = 0; //return pid
                                 do {
                                     retpid = waitpid(spawnpid, &status, 0);
                                     if(WIFSIGNALED(status)) {
@@ -317,7 +349,6 @@ int main() {
                 }
             }
         }
-
     }
     return 0;
 }
