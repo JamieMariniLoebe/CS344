@@ -31,10 +31,12 @@ void setupAddressStruct(struct sockaddr_in* address, int portNumber)
 }
 
 
+
+
 int main(int argc, char *argv[])
 {
   int connectionSocket, charsRead;
-  char buffer[248]; //Plaintext file 5 has more than 256**
+  char buffer[100000]; //Plaintext file 5 has more than 256**
   struct sockaddr_in serverAddress, clientAddress;
   socklen_t sizeOfClientInfo = sizeof(clientAddress);
   pid_t spawnpid = -5; //Initializing for fork
@@ -83,34 +85,101 @@ int main(int argc, char *argv[])
     //Child process will encrypt ciphertext
     spawnpid = fork();
 
+    int bytesRead;
+    int textSize;
+
     //if fork successful
     if(spawnpid == 0) {
 
       // check to make sure child process is communicating with enc_client
       //int confirm = send(connectionSocket, data, sizeof(data), 0); //Sending random data to confirm correct connection
 
+      //Receiving first data from client to confirm correct connection 'Encrypt')
       charsRead = recv(connectionSocket, buffer, sizeof(eId), 0);
+      //printf("Receiving....'%s'\n", buffer);
 
       //If not correct connection
       if(charsRead != sizeof(eId) || strncmp(buffer, eId, charsRead) != 0) {
         fprintf(stderr, "SERVER - BAD IDENTIFIER\n");
         close(connectionSocket);
-        return 1;
+        exit(1);
       }
 
+      //Sending back confirmation of data received, which will be 'encrypt'
       int charSent = send(connectionSocket, buffer, sizeof(eId), 0);
+      //printf("Sending '%s'\n", buffer);
+
+      memset(buffer, '\0', sizeof(buffer));
+
+      //Read in SIZE of plaintext
+      charsRead = recv(connectionSocket, buffer, sizeof(buffer), 0);
+      //printf("Receiving....'%s'\n", buffer);
+
+      //printf("Buffer: %s\n", buffer);
+      textSize = atoi(buffer);
+
+      //Sending size of plaintext back
+      charSent = send(connectionSocket, buffer, sizeof(buffer), 0);
+      printf("Sending '%s'\n\n", buffer);
+      
+      //printf("Text Size: %d\n", textSize);
+      //printf("Chars read: %d\n", charsRead);
+      //printf("Buffer: %c\n", buffer[0]);
+
+      int bytesRec = 0;
+      int bytesLeft = textSize;
+      int index = 0;
+      char *bufPtr = buffer;
+      //vector<char> bufPtr(sizeof(buffer))
+      char pText[5000];
+      int total = 0;
+
+      //Read in plaintext from client
+      while(total != 5) 
+      {
+        charsRead = recv(connectionSocket, buffer, sizeof(buffer), 0);
+        printf("Receiving....'%s'\n", buffer);
+
+        charSent = send(connectionSocket, buffer, sizeof(buffer), 0);
+        printf("Sending confirm signal...\n");
+
+        strcat (pText, buffer);
+        printf("pText: '%s'\n", pText);
+
+        memset(buffer, '\0', sizeof(buffer));
+
+        bytesLeft -= charsRead;
+        total++;
+        //printf("Bytes Received: %d\n", bytesRec);
+        printf("Bytes Left: %d\n", bytesLeft);
+      } 
+
+      /*
+      //Sending size of plaintext back
+      charSent = send(connectionSocket, buffer, sizeof(buffer), 0);
+      printf("Sending '%s'\n", buffer);
+
+      //int textSize = sizeof(buffer);
+*/
+
+      //ENCRYPT TEXT HERE
+
+      //Sending back ciphertext
+      //charSent = send(connectionSocket, buffer, sizeof(buffer), 0);
+      //printf("Sending '%s'\n", buffer);*/
+
+
+
+
       close(connectionSocket);
     }
 
       /*
-      //printf("SERVER: Connected to client running at host %d port %d\n", ntohs(clientAddress.sin_addr.s_addr), ntohs(clientAddress.sin_port));
 
       Child now receives plaintext and a key from enc_client via the connected socket.
       NOTE: The key passed in must be at least as big as the plaintext.
-      memset(buffer, '\0', 256);
 
       // Read the client's message from the socket
-      charsRead = recv(connectionSocket, buffer, , 0); 
 
       if (charsRead < 0)
       {
