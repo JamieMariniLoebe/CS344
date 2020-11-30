@@ -36,7 +36,7 @@ void setupAddressStruct(struct sockaddr_in* address, int portNumber)
 int main(int argc, char *argv[])
 {
   int connectionSocket, charsRead;
-  char buffer[100000]; //Plaintext file 5 has more than 256**
+  char buffer[65000]; //Plaintext file has more than 256**
   struct sockaddr_in serverAddress, clientAddress;
   socklen_t sizeOfClientInfo = sizeof(clientAddress);
   pid_t spawnpid = -5; //Initializing for fork
@@ -131,28 +131,27 @@ int main(int argc, char *argv[])
       int index = 0;
       char *bufPtr = buffer;
       //vector<char> bufPtr(sizeof(buffer))
-      char pText[5000];
+      char pText[70000];
       int total = 0;
 
       //Read in plaintext from client
-      while(total != 5) 
+      while(bytesLeft > 0) 
       {
         charsRead = recv(connectionSocket, buffer, sizeof(buffer), 0);
-        printf("Receiving....'%s'\n", buffer);
+        //printf("Receiving....'%s'\n", buffer);
 
         charSent = send(connectionSocket, buffer, sizeof(buffer), 0);
-        printf("Sending confirm signal...\n");
+        //printf("Sending confirm signal...\n");
 
-        strcat (pText, buffer);
-        printf("pText: '%s'\n", pText);
+        strcat(pText, buffer);
 
         memset(buffer, '\0', sizeof(buffer));
 
         bytesLeft -= charsRead;
-        total++;
         //printf("Bytes Received: %d\n", bytesRec);
         printf("Bytes Left: %d\n", bytesLeft);
-      } 
+      }
+      printf("pText: '%s'\n", pText);
 
       /*
       //Sending size of plaintext back

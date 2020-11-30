@@ -100,7 +100,7 @@ char *createBuffer(char* fileName, long *fileSize)
   if(!buffer) 
   {
     fclose(fp); // close file
-    fputs("memory alloc fails",stderr); //Error output
+    fprintf(stderr, "memory alloc error\n"); //Error output
     exit(1);
   }
 
@@ -111,7 +111,7 @@ char *createBuffer(char* fileName, long *fileSize)
   {
     fclose(fp);
     free(buffer);
-    fputs("entire read fails",stderr);
+    fprintf(stderr, "Error\n");
     exit(1);
   }
 
@@ -129,7 +129,7 @@ int main(int argc, char *argv[])
 {
   int socketFD, portNumber, charsWritten, charsRead;
   struct sockaddr_in serverAddress;
-  char buffer[256];
+  char buffer[80000];
   char* eId = "Encrypt";
   long textLen = 0;
   long keyLen = 0;
@@ -215,18 +215,23 @@ int main(int argc, char *argv[])
   {
     // sending plaintext
     charSent = send(socketFD, txtPtr, sizeof(pText), 0);
-    printf("Sending %s....\n", txtPtr);
+    // printf("Sending %s....\n", txtPtr);
 
-    while((charRecv = recv(socketFD, buffer, sizeof(buffer), 0) !> 0) 
+    while((charRecv = recv(socketFD, buffer, sizeof(buffer), 0)) <= 0) 
     {
-      sleep(10);
+      sleep(30);
     }
-    
-    printf("Received confirm signal....\n");
+
+    if(bytesLeft <= 0) {
+      printf("Done....\n");
+    }
+
+    // printf("Received confirm signal....\n");
     bytesLeft -= charSent;
-    bytesSent += charSent;
+    // bytesSent += charSent;
     txtPtr += charSent;
   } 
+  sleep(2);
 
 /*
   memset(buffer, 0, sizeof(buffer));
