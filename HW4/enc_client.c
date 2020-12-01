@@ -173,7 +173,7 @@ int main(int argc, char *argv[])
   {
     error("CLIENT: ERROR connecting");
   }
-  printf("Connected....\n");
+  //printf("Connected....\n");
 
   // sending eId
   int charSent = send(socketFD, eId, sizeof(eId), 0);
@@ -235,7 +235,7 @@ int main(int argc, char *argv[])
 
   // sending size of key
   charSent = send(socketFD, sizeKey, sizeof(sizeKey), 0);
-  printf("Sending key size\n");
+  //printf("Sending key size\n");
 
   memset(buffer, '\0', sizeof(buffer));
 
@@ -245,14 +245,14 @@ int main(int argc, char *argv[])
   bytesLeft = keyLen;
   const char* keyPtr = key;
 
-  printf("Bytes: %d\n", bytesLeft);
-  printf("Key: '%s'\n", keyPtr);
+  //printf("Bytes: %d\n", bytesLeft);
+  //printf("Key: '%s'\n", keyPtr);
 
   while(bytesLeft > 0)
   {
     // sending key
     charSent = send(socketFD, keyPtr, sizeof(key), 0);
-    printf("Sending....'%s\n", keyPtr);
+    //printf("Sending....'%s\n", keyPtr);
 
     //sleep(5);
 
@@ -265,12 +265,12 @@ int main(int argc, char *argv[])
     // receiving encrypted data
     while ((charRecv = recv(socketFD, buffer, sizeof(buffer), 0)) <= 0) 
     {
-      printf("Buffer keySize: %d\n", buffer);
+      //printf("Buffer keySize: %d\n", buffer);
       sleep(10);
     }
 
     if(bytesLeft <= 0) {
-      printf("Done....\n");
+      //printf("Done....\n");
     }
 
     bytesLeft -= charSent;
@@ -278,12 +278,15 @@ int main(int argc, char *argv[])
   }
 
   charRecv = recv(socketFD, buffer, sizeof(buffer), 0);
+
+  //memset(buffer, '\0', sizeof(buffer));
+
   charRecv = recv(socketFD, buffer, sizeof(buffer), 0);
   //printf("Buffer: %d\n", buffer);
 
-  printf("Buffer: '%s'\n", buffer);
+  printf("'%s'\n", buffer);
 
-  printf("Successful!\n");
+  //printf("Successful!\n");
 
   close(socketFD);
 
