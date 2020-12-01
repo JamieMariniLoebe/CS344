@@ -206,8 +206,8 @@ int main(int argc, char *argv[])
   charSent = 0;
   //printf("%d\n", textLen);
   bytesLeft = textLen;
-  printf("BYTES SENT: %d\n", bytesSent);
-  printf("BYTES LEFT: %d\n", bytesLeft);
+  //printf("BYTES SENT: %d\n", bytesSent);
+  //printf("BYTES LEFT: %d\n", bytesLeft);
   const char *txtPtr = pText;
   int index = 0;
 
@@ -219,26 +219,69 @@ int main(int argc, char *argv[])
 
     while((charRecv = recv(socketFD, buffer, sizeof(buffer), 0)) <= 0) 
     {
-      sleep(30);
+      sleep(10);
+    }
+
+    //printf("Bytes Left: %d\n", bytesLeft);
+
+    bytesLeft -= charSent;
+    txtPtr += charSent;
+
+    //printf("Bytes Left END: %d\n", bytesLeft);
+  }
+
+  char sizeKey[10] = {}; 
+  sprintf(sizeKey, "%d", keyLen);
+
+  // sending size of key
+  charSent = send(socketFD, sizeKey, sizeof(sizeKey), 0);
+  printf("Sending key size\n");
+
+  memset(buffer, '\0', sizeof(buffer));
+
+  // receiving size of key
+  charRecv = recv(socketFD, buffer, sizeof(sizeKey), 0);
+
+  bytesLeft = keyLen;
+  const char* keyPtr = key;
+
+  printf("Bytes: %d\n", bytesLeft);
+  printf("Key: '%s'\n", keyPtr);
+
+  while(bytesLeft > 0)
+  {
+    // sending key
+    charSent = send(socketFD, keyPtr, sizeof(key), 0);
+    printf("Sending....'%s\n", keyPtr);
+
+    //sleep(5);
+
+    //memset(buffer, '\0', sizeof(buffer));
+
+    //charRecv = recv(socketFD, buffer, sizeof(buffer), 0);
+    //printf("Buffer: %d\n", buffer);
+
+
+    // receiving encrypted data
+    while ((charRecv = recv(socketFD, buffer, sizeof(buffer), 0)) <= 0) 
+    {
+      printf("Buffer keySize: %d\n", buffer);
+      sleep(10);
     }
 
     if(bytesLeft <= 0) {
       printf("Done....\n");
     }
 
-    // printf("Received confirm signal....\n");
     bytesLeft -= charSent;
-    // bytesSent += charSent;
-    txtPtr += charSent;
-  } 
-  sleep(2);
+    keyPtr += charSent;
+  }
 
-/*
-  memset(buffer, 0, sizeof(buffer));
+  charRecv = recv(socketFD, buffer, sizeof(buffer), 0);
+  charRecv = recv(socketFD, buffer, sizeof(buffer), 0);
+  //printf("Buffer: %d\n", buffer);
 
-  charRecv = recv(socketFD, key, sizeof(key), 0);
-  printf("Receiving '%s'\n", key);
-*/
+  printf("Buffer: '%s'\n", buffer);
 
   printf("Successful!\n");
 

@@ -46,18 +46,116 @@ void setupAddressStruct(struct sockaddr_in* address, int portNumber, char* hostn
   memcpy((char*) &address->sin_addr.s_addr, hostInfo->h_addr_list[0], hostInfo->h_length);
 }
 
+/* Confirm key has approved chars + not shorter than plaintext */
+void checkChars(char *textverify, char *charArr) 
+{
+  // text to verify, array of acceptable chars, length of plaintext
+
+  int fLen = strlen(textverify);
+  int arrLen = strlen(charArr);
+
+  /* Loop thru each char of key, check for validity */
+  for(int i=0; i<fLen; i++) //Looping thru each char in key
+  {
+  int valid = 0;
+    for(int j=0; j<arrLen; j++) //Looping thru each char of acceptable chars
+    {
+      if(textverify[i] == charArr[j]) 
+      {
+        valid = 1;
+      }
+    }
+    if(valid == 0) {
+      fprintf(stderr, "Bad character(s). Exiting....\n");
+      exit(1);
+    }
+  }
+}
+
+// Referece to Stackoverflow: https://stackoverflow.com/questions/3747086/reading-the-whole-text-file-into-a-char-array-in-c/3747128#3747128 
+
+char *createBuffer(char* fileName, long *fileSize) 
+{ 
+  FILE *fp = NULL;
+  long lSize = 0L;
+  char* buffer = NULL;
+  
+  fp = fopen (fileName , "r");
+  if(!fp) 
+  {
+     perror(fileName);
+     exit(1);
+  }
+
+  /* int fseek(FILE *stream, long int offset, int whence */
+
+  fseek(fp, 0L, SEEK_END); // move pointer to end of file
+  lSize = ftell(fp); // ftell() --> get curr val of file position
+  *fileSize = lSize; // Setting pointer to fileSize
+  rewind( fp ); // Returning back to beginning of file
+
+  /* allocate memory for entire content */
+  buffer = (char *) calloc(lSize+1, sizeof(char));
+
+  if(!buffer) 
+  {
+    fclose(fp); // close file
+    fprintf(stderr, "memory alloc error\n"); //Error output
+    exit(1);
+  }
+
+  /* read file into the buffer */
+  // size_t fread(void * buffer, size_t size, size_t count, FILE * stream)
+  
+  if(1!=fread(buffer, lSize, 1, fp)) // Read in 1 chunk of lsize bytes
+  {
+    fclose(fp);
+    free(buffer);
+    fprintf(stderr, "Error\n");
+    exit(1);
+  }
+
+  if(buffer[lSize - 1] == '\n') 
+  {
+    buffer[lSize - 1] = '\0'; // input null terminator in place of newline
+    *fileSize -= 1; // decrement filesize
+  }
+
+  fclose(fp);
+  return buffer;
+}
+
 int main(int argc, char *argv[]) 
 {
   int socketFD, portNumber, charsWritten, charsRead;
   struct sockaddr_in serverAddress;
-  char buffer[256];
+  char buffer[80000];
+  char* eId = "Encrypt";
+  long textLen = 0;
+  long keyLen = 0;
+  char goodChars[27] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ ";
+  int bytesSent = 0;
+  int bytesLeft = 0;
 
   // Check usage & args
   if (argc < 3) 
   { 
     fprintf(stderr,"USAGE: %s hostname port\n", argv[0]); 
     exit(0); 
-  } 
+  }
+
+  char *pText = createBuffer(argv[1], &textLen);
+  char *key = createBuffer(argv[2], &keyLen);
+
+  if(keyLen < textLen) 
+  {
+    fprintf(stderr,"Error: Key smaller than plaintext. Exiting....\n"); 
+    exit(1);
+  }
+
+  /* check files for valid input */
+  checkChars(key, goodChars);
+  checkChars(pText, goodChars);
 
   // Create a socket
   socketFD = socket(AF_INET, SOCK_STREAM, 0);
@@ -68,31 +166,101 @@ int main(int argc, char *argv[])
   }
 
    // Set up the server address struct
-  setupAddressStruct(&serverAddress, atoi(argv[2]), argv[1]);
+  setupAddressStruct(&serverAddress, atoi(argv[3]), "localhost");
 
   // Connect to server
   if (connect(socketFD, (struct sockaddr*)&serverAddress, sizeof(serverAddress)) < 0)
   {
     error("CLIENT: ERROR connecting");
   }
+  printf("Connected....\n");
+
+  // sending eId
+  int charSent = send(socketFD, eId, sizeof(eId), 0);
+  //printf("Sending '%s'\n", eId);
+
+  // receiving eId
+  int charRecv = recv(socketFD, buffer, sizeof(eId), 0);
+  //printf("Receiving '%s'\n", buffer);
+
+  if(charRecv != sizeof(eId) || strncmp(eId, buffer, sizeof(eId))) 
+  {
+    fprintf(stderr, "CLIENT - BAD IDENTIFIER\n");
+    close(socketFD);
+    return 1;
+  }
+
+  char size[10] = {}; 
+  sprintf(size, "%d", textLen);
+
+  // sending size of plaintext
+  charSent = send(socketFD, size, sizeof(size), 0);
+  //printf("Sending '%s'\n", size);
+
+  memset(buffer, 0, sizeof(buffer));
+
+  // receiving size of plaintext
+  charRecv = recv(socketFD, buffer, sizeof(size), 0);
+  //printf("Receiving '%s'\n", buffer);
+
+  charSent = 0;
+  //printf("%d\n", textLen);
+  bytesLeft = textLen;
+  printf("BYTES SENT: %d\n", bytesSent);
+  printf("BYTES LEFT: %d\n", bytesLeft);
+  const char *txtPtr = pText;
+  int index = 0;
+
+  while(bytesLeft > 0)
+  {
+    // sending plaintext
+    charSent = send(socketFD, txtPtr, sizeof(pText), 0);
+    // printf("Sending %s....\n", txtPtr);
+
+    while((charRecv = recv(socketFD, buffer, sizeof(buffer), 0)) <= 0) 
+    {
+      sleep(30);
+    }
+
+    if(bytesLeft <= 0) {
+      printf("Done....\n");
+    }
+
+    // printf("Received confirm signal....\n");
+    bytesLeft -= charSent;
+    // bytesSent += charSent;
+    txtPtr += charSent;
+  } 
+  sleep(2);
+
+/*
+  memset(buffer, 0, sizeof(buffer));
+
+  charRecv = recv(socketFD, key, sizeof(key), 0);
+  printf("Receiving '%s'\n", key);
+*/
+
+  printf("Successful!\n");
+
+  close(socketFD);
 
   // Get input message from user
-  printf("CLIENT: Enter text to send to the server, and then hit enter: ");
+  //printf("CLIENT: Enter text to send to the server, and then hit enter: ");
 
   // Clear out the buffer array
-  memset(buffer, '\0', sizeof(buffer));
+  //memset(buffer, '\0', sizeof(buffer));
 
   // Get input from the user, trunc to buffer - 1 chars, leaving \0
-  fgets(buffer, sizeof(buffer) - 1, stdin);
+  //fgets(buffer, sizeof(buffer) - 1, stdin);
 
   // Remove the trailing \n that fgets adds
-  buffer[strcspn(buffer, "\n")] = '\0'; 
+  //buffer[strcspn(buffer, "\n")] = '\0'; 
 
   // Send message to server
   // Write to the server
-  charsWritten = send(socketFD, buffer, strlen(buffer), 0); 
+  //charsWritten = send(socketFD, buffer, strlen(buffer), 0); 
 
-  if (charsWritten < 0)
+  /*if (charsWritten < 0)
   {
     error("CLIENT: ERROR writing to socket");
   }
@@ -100,21 +268,23 @@ int main(int argc, char *argv[])
   if (charsWritten < strlen(buffer))
   {
     printf("CLIENT: WARNING: Not all data written to socket!\n");
-  }
+  } 
+  */
 
   // Get return message from server
   // Clear out the buffer again for reuse
-  memset(buffer, '\0', sizeof(buffer));
+  //memset(buffer, '\0', sizeof(buffer));
   
   // Read data from the socket, leaving \0 at end
-  charsRead = recv(socketFD, buffer, sizeof(buffer) - 1, 0);
+  //charsRead = recv(socketFD, buffer, sizeof(buffer) - 1, 0);
 
-  if (charsRead < 0)
+  /*(if (charsRead < 0)
   {
     error("CLIENT: ERROR reading from socket");
-  }
+  } 
+  */
   
-  printf("CLIENT: I received this from the server: \"%s\"\n", buffer);
+  //printf("CLIENT: I received this from the server: \"%s\"\n", buffer);
 
   // Close the socket
   close(socketFD); 

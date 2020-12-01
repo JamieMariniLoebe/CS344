@@ -30,7 +30,76 @@ void setupAddressStruct(struct sockaddr_in* address, int portNumber)
   address->sin_addr.s_addr = INADDR_ANY;
 }
 
+char *cipherFunc(char pText[], char key[]) {
 
+  int len = strlen(pText);
+  int index = 0;
+  int count = 0;
+  char alpha[27] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ ";
+
+  int numText[50000] = {}; // Hold char number values
+  int numKey[50000] = {}; // Hold char number values
+
+  int cipherNums[50000] = {}; 
+  char *cipherChars = NULL;
+  cipherChars = malloc(50000 * sizeof(cipherChars));
+
+  cipherChars = malloc(50000 * sizeof(char));
+
+  int *charVal = 0;
+
+  while(pText[index] != '\0') 
+  {
+    if((strchr(alpha, pText[index])) == NULL) 
+    {
+      printf("Error....\n");
+      break;
+    }
+    numText[count] = (int)(strchr(alpha, pText[index]) - alpha);
+    index++;
+    count++;
+  }
+
+  printf("\n");
+  index = 0;
+  count = 0;
+
+  while(key[index] != '\0') 
+  {
+    if((strchr(alpha, key[index])) == NULL) 
+    {
+      printf("Error....\n");
+      break;
+    }
+
+    numKey[count] = (int)(strchr(alpha, key[index]) - alpha);
+    index++;
+    count++;
+  }
+  printf("\n");
+
+  index = 0;
+  int total = 0; //Hold total after adding 2 indexes
+
+  //Add key and message
+  while(index < len) {
+    total = numText[index] + numKey[index];
+    total = total % 26;
+
+    cipherNums[index] = total;
+    index++;
+  }
+  printf("\n");
+  index = 0;
+
+  /* convert encrypted nums to corresponding chars */
+  while(index < len) {
+    cipherChars[index] = alpha[cipherNums[index]];
+    //printf("Char Final: %c\n", cipherChars[index]);
+    index++;
+  }
+  return cipherChars;
+}
 
 
 int main(int argc, char *argv[])
@@ -121,17 +190,13 @@ int main(int argc, char *argv[])
       //Sending size of plaintext back
       charSent = send(connectionSocket, buffer, sizeof(buffer), 0);
       printf("Sending '%s'\n\n", buffer);
-      
-      //printf("Text Size: %d\n", textSize);
-      //printf("Chars read: %d\n", charsRead);
-      //printf("Buffer: %c\n", buffer[0]);
 
       int bytesRec = 0;
       int bytesLeft = textSize;
       int index = 0;
       char *bufPtr = buffer;
-      //vector<char> bufPtr(sizeof(buffer))
       char pText[70000];
+      char key[70000];
       int total = 0;
 
       //Read in plaintext from client
@@ -149,9 +214,57 @@ int main(int argc, char *argv[])
 
         bytesLeft -= charsRead;
         //printf("Bytes Received: %d\n", bytesRec);
-        printf("Bytes Left: %d\n", bytesLeft);
+        //printf("Bytes Left: %d\n", bytesLeft);
       }
-      printf("pText: '%s'\n", pText);
+      //printf("pText: '%s'\n\n", pText);
+
+      memset(buffer, '\0', sizeof(buffer));
+
+      //Read in SIZE of key
+      charsRead = recv(connectionSocket, buffer, sizeof(buffer), 0);
+
+      int keySize = atoi(buffer);
+      //printf("keySize: %d\n", keySize);
+
+      //Sending size of key back
+      //charSent = send(connectionSocket, buffer, sizeof(buffer), 0);
+      //printf("Sending '%s'\n\n", buffer);
+
+      bytesLeft = keySize;
+
+      /* Receiving key */
+      //printf("Bytes Left: %d\n", bytesLeft);
+
+      while(bytesLeft > 0) 
+      {
+        charsRead = recv(connectionSocket, buffer, sizeof(buffer), 0);
+        printf("Receiving....'%s'\n", buffer);
+
+        charSent = send(connectionSocket, buffer, sizeof(buffer), 0);
+        //printf("Sending confirm signal...\n");
+
+        strcat(key, buffer);
+
+        memset(buffer, '\0', sizeof(buffer));
+
+        bytesLeft -= charsRead;
+        //printf("Bytes Received: %d\n", bytesRec);
+        //printf("Bytes Left: %d\n", bytesLeft);
+      }
+      printf("Key: '%s'\n", key);
+
+      //charSent = send(connectionSocket, key, sizeof(key), 0);
+      //printf("Sending....'%s'\n", key);
+
+      char *encryptData = cipherFunc(pText, key);
+
+      printf("Encrypt: '%s'\n", encryptData);
+
+      //charSent = send(connectionSocket, keySize, sizeof(encryptData), 0);
+
+      charSent = send(connectionSocket, encryptData, sizeof(encryptData), 0);
+
+      //charsRead= recv(connectionSocket, buffer, sizeof(buffer), 0);
 
       /*
       //Sending size of plaintext back
