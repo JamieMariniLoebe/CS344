@@ -53,12 +53,13 @@ void checkChars(char *textverify, char *charArr)
 
   int fLen = strlen(textverify);
   int arrLen = strlen(charArr);
+  int i,j,valid;
 
   /* Loop thru each char of key, check for validity */
-  for(int i=0; i<fLen; i++) //Looping thru each char in key
+  for(i=0; i<fLen; i++) //Looping thru each char in key
   {
-  int valid = 0;
-    for(int j=0; j<arrLen; j++) //Looping thru each char of acceptable chars
+  valid = 0;
+    for(j=0; j<arrLen; j++) //Looping thru each char of acceptable chars
     {
       if(textverify[i] == charArr[j]) 
       {

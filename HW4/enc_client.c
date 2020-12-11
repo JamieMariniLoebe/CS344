@@ -53,12 +53,13 @@ void checkChars(char *textverify, char *charArr)
 
   int fLen = strlen(textverify);
   int arrLen = strlen(charArr);
+  int i,j,valid;
 
   /* Loop thru each char of key, check for validity */
-  for(int i=0; i<fLen; i++) //Looping thru each char in key
+  for(i=0; i<fLen; i++) //Looping thru each char in key
   {
-  int valid = 0;
-    for(int j=0; j<arrLen; j++) //Looping thru each char of acceptable chars
+  valid = 0;
+    for(j=0; j<arrLen; j++) //Looping thru each char of acceptable chars
     {
       if(textverify[i] == charArr[j]) 
       {
@@ -193,33 +194,34 @@ int main(int argc, char *argv[])
   char size[10] = {}; 
   sprintf(size, "%d", textLen);
 
-  // sending size of plaintext
+  /******************** SEND SIZE OF PLAINTEXT ************************/
   charSent = send(socketFD, size, sizeof(size), 0);
-  //printf("Sending '%s'\n", size);
+  //printf("Sending size of Plaintext: '%s'\n\n", size);
 
   memset(buffer, 0, sizeof(buffer));
 
-  // receiving size of plaintext
-  charRecv = recv(socketFD, buffer, sizeof(size), 0);
-  //printf("Receiving '%s'\n", buffer);
+  /******************** GET SIZE OF PLAINTEXT BACK ************************/
+  //charRecv = recv(socketFD, buffer, sizeof(size), 0);
+  //printf("Receiving size of Plaintext: '%s'\n\n", buffer);
 
   charSent = 0;
   //printf("%d\n", textLen);
   bytesLeft = textLen;
   //printf("BYTES SENT: %d\n", bytesSent);
-  //printf("BYTES LEFT: %d\n", bytesLeft);
+  //printf("BYTES LEFT BEFORE SEND PLAINTEXT: %d\n", bytesLeft);
   const char *txtPtr = pText;
   int index = 0;
 
   while(bytesLeft > 0)
   {
-    // sending plaintext
+    /******************** SEND PLAINTEXT ************************/
     charSent = send(socketFD, txtPtr, sizeof(pText), 0);
-    // printf("Sending %s....\n", txtPtr);
+    //printf("Sending PLAINTEXT: %s....\n\n", txtPtr);
 
-    while((charRecv = recv(socketFD, buffer, sizeof(buffer), 0)) <= 0) 
+    /******************** GET PLAINTEXT BACK ************************/
+    if((charRecv = recv(socketFD, buffer, sizeof(buffer), 0)) >= 0) 
     {
-      sleep(10);
+      //printf("Receiving Plaintext Size: '%s'\n\n", buffer);
     }
 
     //printf("Bytes Left: %d\n", bytesLeft);
@@ -233,58 +235,90 @@ int main(int argc, char *argv[])
   char sizeKey[10] = {}; 
   sprintf(sizeKey, "%d", keyLen);
 
-  // sending size of key
+  /******************** SEND SIZE OF KEY ************************/
   charSent = send(socketFD, sizeKey, sizeof(sizeKey), 0);
-  //printf("Sending key size\n");
+  //printf("Sending key size: '%s'\n\n", sizeKey);
 
   memset(buffer, '\0', sizeof(buffer));
 
-  // receiving size of key
+  /******************** GET SIZE OF KEY BACK ************************/
   charRecv = recv(socketFD, buffer, sizeof(sizeKey), 0);
-
+  printf("Receiving key size: '%s'\n\n", sizeKey);
+  
   bytesLeft = keyLen;
   const char* keyPtr = key;
 
-  //printf("Bytes: %d\n", bytesLeft);
-  //printf("Key: '%s'\n", keyPtr);
 
-  while(bytesLeft > 0)
-  {
-    // sending key
+  //while(bytesLeft > 0)
+  //{
+    /******************** SEND KEY ************************/
     charSent = send(socketFD, keyPtr, sizeof(key), 0);
-    //printf("Sending....'%s\n", keyPtr);
+    printf("Sending KEY:....'%s'\n\n", keyPtr);
 
     //sleep(5);
 
     //memset(buffer, '\0', sizeof(buffer));
+    //sleep(5);
 
+    /******************** GET KEY BACK ************************/
     //charRecv = recv(socketFD, buffer, sizeof(buffer), 0);
-    //printf("Buffer: %d\n", buffer);
-
-
-    // receiving encrypted data
-    while ((charRecv = recv(socketFD, buffer, sizeof(buffer), 0)) <= 0) 
-    {
-      //printf("Buffer keySize: %d\n", buffer);
-      sleep(10);
-    }
-
-    if(bytesLeft <= 0) {
-      //printf("Done....\n");
-    }
+    //printf("Receiving key: '%s'\n\n", buffer);
+    sleep(10);  
 
     bytesLeft -= charSent;
     keyPtr += charSent;
-  }
+  //}
 
+  //charRecv = recv(socketFD, buffer, sizeof(buffer), 0);
+  //printf("Final Data: '%s'\n", buffer);
+
+  //while(bytesLeft > 0)
+  //{
+    /******************** GET DATA SIZE ************************/
+    //charRecv = recv(socketFD, buffer, sizeof(buffer), 0);
+    //int dataSize = atoi(buffer);
+    //printf("Size: %d", dataSize);
+    //printf("Receiving key: '%s'\n", buffer);
+    //sleep(10);  
+
+    //bytesLeft -= charSent;
+    //keyPtr += charSent;
+  //}
+
+  char encData[72000];
+
+  //while(dataSize > 0)
+  //{
+    /******************** GET DATA ************************/
   charRecv = recv(socketFD, buffer, sizeof(buffer), 0);
+  printf("Final Data: '%s'\n", buffer);
+  //strcat(encData, buffer);
+    //dataSize -= charRecv;
+  //}
+
+  //printf("Final Data: '%s'\n", encData);
+
+  //charRecv = recv(socketFD, buffer, sizeof(buffer), 0);
+  //printf("Size: %d\n", buffer);
+
+  //bytesLeft = atoi(buffer);
+  //printf("Size: %d\n", bytesLeft);
 
   //memset(buffer, '\0', sizeof(buffer));
 
-  charRecv = recv(socketFD, buffer, sizeof(buffer), 0);
+  //bytesLeft = keyLen;
+
+    //charRecv = recv(socketFD, buffer, sizeof(buffer), 0);
+    //bytesLeft -= charRecv;
+
+  //memset(buffer, '\0', sizeof(buffer));
+
+    //charRecv = recv(socketFD, buffer, sizeof(buffer), 0);
+    //bytesLeft -= charRecv;
+
   //printf("Buffer: %d\n", buffer);
 
-  printf("'%s'\n", buffer);
+  //printf("'%s'\n", buffer);
 
   //printf("Successful!\n");
 
